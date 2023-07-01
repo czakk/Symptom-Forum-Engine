@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Forum{% endblock %}
+
+{% block content %}
+    {% for topic in topics %}
+        {{ topic.name }}
+        {% for subtopic in subtopics %}
+            {{ subtopic.name }}
+        {% empty %}
+            No subtopics
+        {% endfor %}
+    {% empty %}
+        No topics
+    {% endfor %}
+
+{% endblock %}
