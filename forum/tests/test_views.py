@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 
-from forum.models import Topic, Subtopic
+from forum.models import Topic, Subtopic, Post
 from forum.tests.utils import create_object_with_perm_for_user
 
 
@@ -139,3 +139,69 @@ class TestTopic(TestViewBase):
         response = self.client.get('/forum/topic-number-2/')
 
         self.assertEqual(response.status_code, 404)
+
+
+class TestSubtopic(TestViewBase):
+    def setUp(self):
+        super().setUp()
+        self.subtopic = create_object_with_perm_for_user(Subtopic, 'Subtopic number 1', self.everyone, topic=self.topic)
+        self.user = User.objects.create(username='Josh')
+
+    def test_view_using_correct_template(self):
+        response = self.client.get(self.subtopic.get_absolute_url())
+
+        self.assertTemplateUsed(response, 'forum/topics/subtopic.html')
+
+    def test_view_display_information_about_no_posts(self):
+        response = self.client.get(self.subtopic.get_absolute_url())
+
+        self.assertContains(response, 'No posts')
+
+    def test_view_display_subtopic_name(self):
+        response = self.client.get(self.subtopic.get_absolute_url())
+
+        self.assertContains(response, self.subtopic.name)
+
+    def test_view_display_all_posts(self):
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 1', text='nothing')
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 2', text='nothing')
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 3', text='nothing')
+
+        response = self.client.get(self.subtopic.get_absolute_url())
+
+        self.assertContains(response, 'Post number 1')
+        self.assertContains(response, 'Post number 2')
+        self.assertContains(response, 'Post number 3')
+
+    def test_view_display_only_published_and_no_hidden_posts(self):
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 1', text='nothing')
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 2', text='nothing', hidden=True)
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 3', text='nothing',
+                            status='pending')
+
+        response = self.client.get(self.subtopic.get_absolute_url())
+
+        self.assertContains(response, 'Post number 1')
+        self.assertNotContains(response, 'Post number 2')
+        self.assertNotContains(response, 'Post number 3')
+
+    def test_author_can_see_his_pending_post(self):
+        Post.objects.create(author=self.user, subtopic=self.subtopic, name='Post number 1', text='nothing',
+                            status='pending')
+
+        self.client.force_login(self.user)
+        response = self.client.get(self.subtopic.get_absolute_url())
+
+        self.assertContains(response, 'Post number 1')
+
+    def test_view_raise_403_if_user_doesnt_have_permissions(self):
+        other_subtopic = create_object_with_perm_for_user(Subtopic, 'Other Subtopic', self.moderators, topic=self.topic)
+
+        response = self.client.get(other_subtopic.get_absolute_url())
+
+        self.assertEquals(response.status_code, 403)
+
+    def test_view_raise_404_if_subject_doesnt_exists(self):
+        response = self.client.get(f'/forum/{self.topic.slug}/no-subtopic-2/')
+
+        self.assertEquals(response.status_code, 404)

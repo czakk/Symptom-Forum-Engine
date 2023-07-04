@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subtopic.name }}{% endblock %}
+
+{% block content %}
+    <h1>{{ subtopic.name }}</h1>
+    {% if pending %}
+         <h2>Pending</h2>
+        {% for p in pending %}
+            {{ p.name }}
+        {% endfor %}
+
+    {% endif %}
+    {% for post in posts %}
+        {{ post.name }} {{ post.author }}
+    {% empty %}
+        No posts
+    {% endfor %}
+
+{% endblock %}

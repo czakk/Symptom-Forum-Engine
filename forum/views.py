@@ -25,8 +25,22 @@ def topic_detail(request, topic_slug):
                   {'topic': topic,
                    'subtopics': subtopics})
 
-def subtopic_detail(request):
-    pass
+@permission_required_or_403('forum.view_subtopic', (Subtopic, 'topic__slug', 'topic_slug', 'slug', 'subtopic_slug'))
+def subtopic_detail(request, topic_slug, subtopic_slug):
+    subtopic = get_object_or_404(Subtopic, topic__slug=topic_slug, slug=subtopic_slug)
+    posts = subtopic.posts.select_related('author') # TODO add author__profile to related
+
+    public_posts = posts.filter(hidden=False, status='published')
+
+    user_pending_posts = None
+    if request.user.is_authenticated:
+        user_pending_posts = posts.filter(author=request.user, status='pending')
+
+    return render(request,
+                  'forum/topics/subtopic.html',
+                  {'subtopic': subtopic,
+                   'posts': public_posts,
+                   'pending': user_pending_posts})
 
 def post_detail(request):
     pass
