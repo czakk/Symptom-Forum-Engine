@@ -1,12 +1,14 @@
 {% extends "base.html" %}
+{% load forum_tags %}
 
 {% block title %}Forum{% endblock %}
 
 {% block content %}
     {% for topic in topics %}
-        {{ topic.name }}
+        <a href="{{ topic.get_absolute_url }}">{{ topic.name }}</a>
+        {% get_subtopics_for_user request.user topic as subtopics %}
         {% for subtopic in subtopics %}
-            {{ subtopic.name }}
+            <a href="{{ subtopic.get_absolute_url }}">{{ subtopic.name }}</a>
         {% empty %}
             No subtopics
         {% endfor %}

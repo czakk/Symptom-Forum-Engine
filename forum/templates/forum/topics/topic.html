@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic.name }}{% endblock %}
+
+{% block content %}
+    <h1>{{ topic.name }}</h1>
+    {% for subtopic in subtopics %}
+        <a href="{{ subtopic.get_absolute_url }}">{{ subtopic.name }}</a>
+    {% endfor %}
+
+{% endblock %}

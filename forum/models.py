@@ -1,7 +1,8 @@
-from django.db import models
-from django.utils.text import slugify
-from django.urls import reverse
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.db import models
+from django.urls import reverse
+from django.utils.text import slugify
 
 # Create your models here.
 
@@ -28,12 +29,12 @@ class Topic(TopicBase):
         verbose_name_plural = 'topics'
 
     def clean(self, *args, **kwargs):
-        duplicate_topic = self.__class__.objects.filter(name=self.name)
+        duplicate_topic = self.__class__.objects.filter(name__icontains=self.name)
         if duplicate_topic.exists():
             raise ValidationError('Topic with this name already exists')
 
     def get_absolute_url(self):
-        return reverse('forum:topic', args=[self.slug])
+        return reverse('forum:topic_detail', args=[self.slug])
 
 
 class Subtopic(TopicBase):
@@ -45,10 +46,47 @@ class Subtopic(TopicBase):
         verbose_name_plural = 'subtopics'
 
     def clean(self, *args, **kwargs):
-        duplicate_subtopic = self.topic.subtopics.filter(name=self.name)
+        duplicate_subtopic = self.topic.subtopics.filter(name__icontains=self.name)
         if duplicate_subtopic.exists():
             raise ValidationError('Subtopic with this name already exists')
 
     def get_absolute_url(self):
-        return reverse('forum:subtopic', args=[self.topic.slug,
+        return reverse('forum:subtopic_detail', args=[self.topic.slug,
                                                self.slug])
+
+
+class Post(TopicBase):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('published', 'Published'),
+    )
+
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name='posts')
+    subtopic = models.ForeignKey(Subtopic,
+                                 on_delete=models.CASCADE,
+                                 related_name='posts')
+    created = models.DateTimeField(auto_now_add=True,
+                                   db_index=True)
+    updated = models.DateTimeField(auto_now=True)
+    text = models.TextField()
+    status = models.CharField(choices=STATUS_CHOICES,
+                              default='published')
+    hidden = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('created', )
+
+    def clean(self, *args, **kwargs):
+        duplicate_subtopic = self.subtopic.posts.filter(name__icontains=self.name)
+        if duplicate_subtopic.exists():
+            raise ValidationError('Subtopic with this name already exists')
+
+    def get_absolute_url(self):
+        return reverse('forum:post_detail', args=[self.subtopic.topic.slug,
+                                           self.subtopic.slug,
+                                           self.id,
+                                           self.slug])
+
+
