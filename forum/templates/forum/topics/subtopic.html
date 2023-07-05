@@ -12,7 +12,7 @@
 
     {% endif %}
     {% for post in posts %}
-        {{ post.name }} {{ post.author }}
+        <a href="{{ post.get_absolute_url }}">{{ post.name }}</a> {{ post.author }}
     {% empty %}
         No posts
     {% endfor %}

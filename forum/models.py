@@ -29,7 +29,7 @@ class Topic(TopicBase):
         verbose_name_plural = 'topics'
 
     def clean(self, *args, **kwargs):
-        duplicate_topic = self.__class__.objects.filter(name__icontains=self.name)
+        duplicate_topic = self.__class__.objects.filter(name__icontains=self.name).exclude(id=self.id)
         if duplicate_topic.exists():
             raise ValidationError('Topic with this name already exists')
 
@@ -46,7 +46,7 @@ class Subtopic(TopicBase):
         verbose_name_plural = 'subtopics'
 
     def clean(self, *args, **kwargs):
-        duplicate_subtopic = self.topic.subtopics.filter(name__icontains=self.name)
+        duplicate_subtopic = self.topic.subtopics.filter(name__icontains=self.name).exclude(id=self.id)
         if duplicate_subtopic.exists():
             raise ValidationError('Subtopic with this name already exists')
 
@@ -79,9 +79,9 @@ class Post(TopicBase):
         ordering = ('created', )
 
     def clean(self, *args, **kwargs):
-        duplicate_subtopic = self.subtopic.posts.filter(name__icontains=self.name)
+        duplicate_subtopic = self.subtopic.posts.filter(name__icontains=self.name).exclude(id=self.id)
         if duplicate_subtopic.exists():
-            raise ValidationError('Subtopic with this name already exists')
+            raise ValidationError('Post with this name already exists')
 
     def get_absolute_url(self):
         return reverse('forum:post_detail', args=[self.subtopic.topic.slug,

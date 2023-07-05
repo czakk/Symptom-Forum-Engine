@@ -1,3 +1,5 @@
+from account.models import Profile
+
 from django.db.models.signals import post_migrate, post_save
 from django.contrib.auth.models import Group, User
 from django.dispatch import receiver
@@ -12,3 +14,5 @@ def user_to_everyone_group(sender, instance, created, **kwargs):
     if created:
         everyone_group = Group.objects.get(name='Everyone')
         instance.groups.add(everyone_group)
+
+        Profile.objects.create(user=instance)
