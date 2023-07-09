@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend', # this is default
+    'account.authentication.EmailBackend',
     'guardian.backends.ObjectPermissionBackend',
 )
 
@@ -131,6 +132,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -139,3 +143,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MONGODB_URI = f'mongodb+srv://{os.getenv("MONGODB_USERNAME")}:' \
               f'{os.getenv("MONGODB_PASSWORD")}'\
               f'@settings.6umaouk.mongodb.net/?retryWrites=true&w=majority'
+
+LOGIN_REDIRECT_URL = 'forum:topic_list'
+LOGOUT_REDIRECT_URL = 'forum:topic_list'
+LOGIN_URL = 'account:login'
+LOGOUT_URL = 'account:logout'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

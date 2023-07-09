@@ -1,5 +1,5 @@
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -29,7 +29,7 @@ class Topic(TopicBase):
         verbose_name_plural = 'topics'
 
     def clean(self, *args, **kwargs):
-        duplicate_topic = self.__class__.objects.filter(name__icontains=self.name).exclude(id=self.id)
+        duplicate_topic = self.__class__.objects.filter(name__iexact=self.name).exclude(id=self.id)
         if duplicate_topic.exists():
             raise ValidationError('Topic with this name already exists')
 
@@ -46,7 +46,7 @@ class Subtopic(TopicBase):
         verbose_name_plural = 'subtopics'
 
     def clean(self, *args, **kwargs):
-        duplicate_subtopic = self.topic.subtopics.filter(name__icontains=self.name).exclude(id=self.id)
+        duplicate_subtopic = self.topic.subtopics.filter(name__iexact=self.name).exclude(id=self.id)
         if duplicate_subtopic.exists():
             raise ValidationError('Subtopic with this name already exists')
 
@@ -77,11 +77,8 @@ class Post(TopicBase):
 
     class Meta:
         ordering = ('created', )
-
-    def clean(self, *args, **kwargs):
-        duplicate_subtopic = self.subtopic.posts.filter(name__icontains=self.name).exclude(id=self.id)
-        if duplicate_subtopic.exists():
-            raise ValidationError('Post with this name already exists')
+        verbose_name = 'post'
+        verbose_name_plural = 'posts'
 
     def get_absolute_url(self):
         return reverse('forum:post_detail', args=[self.subtopic.topic.slug,

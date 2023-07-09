@@ -51,12 +51,6 @@ class TestPost(TestCase):
         self.subtopic = Subtopic.objects.create(name='Test Sub', topic=self.topic)
         self.author = User.objects.create(username='Mark')
 
-    def test_raise_exception_if_name_not_unique_for_subtopic(self):
-        Post.objects.create(name='Test Post', subtopic=self.subtopic, author=self.author, text='test')
-
-        with self.assertRaises(ValidationError):
-            Post.objects.create(subtopic=self.subtopic, name='Test post', author=self.author, text='test')
-
     def test_same_name_can_be_use_for_other_subtopic(self):
         Post.objects.create(name='Post', subtopic=self.subtopic, author=self.author, text='test')
 
