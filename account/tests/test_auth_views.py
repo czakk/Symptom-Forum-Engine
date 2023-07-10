@@ -74,6 +74,13 @@ class TestLogoutView(AuthViewTestBase):
 
 
 class TestRegisterView(AuthViewTestBase):
+    def setUp(self):
+        super().setUp()
+        self.user_data = {'username': 'Mat',
+                          'email': 'mat.email@example.com',
+                          'password': '123',
+                          'confirm_password': '123'}
+
     def test_using_correct_template(self):
         response = self.client.get(reverse_lazy('account:register'))
 
@@ -89,38 +96,29 @@ class TestRegisterView(AuthViewTestBase):
     def test_create_user_if_data_is_correct(self):
         users_count_before_post = User.objects.count()
 
-        self.client.post(reverse_lazy('account:register'), {'username': 'Mat',
-                                                            'email': 'mat.email@example.com',
-                                                            'password': '123',
-                                                            'confirm_password': '123'})
+        self.client.post(reverse_lazy('account:register'), self.user_data)
 
         users_count_after_post = User.objects.count()
 
         self.assertTrue(users_count_before_post + 1 == users_count_after_post)
 
     def test_created_user_have_profile(self):
-        self.client.post(reverse_lazy('account:register'), {'username': 'Mat',
-                                                            'email': 'mat.email@example.com',
-                                                            'password': '123',
-                                                            'confirm_password': '123'})
+        self.client.post(reverse_lazy('account:register'), self.user_data)
 
         profile = Profile.objects.filter(user__username='Mat')
         self.assertTrue(profile.exists())
 
     def test_render_register_done_template_if_data_is_correct(self):
-        response = self.client.post(reverse_lazy('account:register'), {'username': 'Mat',
-                                                            'email': 'mat.email@example.com',
-                                                            'password': '123',
-                                                            'confirm_password': '123'})
+        response = self.client.post(reverse_lazy('account:register'), self.user_data)
 
         self.assertTemplateUsed(response, 'account/register_done.html')
 
     def test_fail_creation_if_passwords_not_same(self):
         users_count_before_post = User.objects.count()
-        self.client.post(reverse_lazy('account:register'), {'username': 'Mat',
-                                                            'email': 'mat.email@example.com',
-                                                            'password': '123',
-                                                            'confirm_password': '321'})
+
+        self.user_data['confirm_password'] = '321'
+        self.client.post(reverse_lazy('account:register'), self.user_data)
+
         users_count_after_post = User.objects.count()
 
         self.assertTrue(users_count_before_post == users_count_after_post)
@@ -128,10 +126,18 @@ class TestRegisterView(AuthViewTestBase):
     def test_fail_creation_if_email_is_used(self):
         users_count_before_post = User.objects.count()
 
-        self.client.post(reverse_lazy('account:register'), {'username': 'Mat',
-                                                            'email': 'josh.mail@localhost.com',
-                                                            'password': '123',
-                                                            'confirm_password': '123'})
+        self.user_data['email'] = 'josh.mail@localhost.com'
+        self.client.post(reverse_lazy('account:register'), self.user_data)
+
+        users_count_after_post = User.objects.count()
+
+        self.assertTrue(users_count_before_post == users_count_after_post)
+
+    def test_fail_creation_if_username_is_used(self):
+        User.objects.create(username='Mat')
+        users_count_before_post = User.objects.count()
+
+        self.client.post(reverse_lazy('account:register'), self.user_data)
 
         users_count_after_post = User.objects.count()
 

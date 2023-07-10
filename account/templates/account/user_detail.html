@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block content %}
+    {{ request.user }}
+    {{ user }}
+    {{ user.username }}
+    {{ user.profile.birthday|date:"d/m/Y" }}
+
+    {% if request.user == user %}TEST<a href="{% url 'account:edit' %}">Edit profile</a>{% endif %}
+
+    {% for post in posts %}
+        {{ post.name }}
+    {% endfor %}
+
+{% endblock %}
